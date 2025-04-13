@@ -1,19 +1,13 @@
-package com.payroll.model;
+package com.payroll.payload;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "company_info")
-public class CompanyInfo {
-
-    @Id
-    private String id;
+public class CompanyInfoRequest {
 
     @NotBlank(message = "Company name is required")
     private String companyName;
