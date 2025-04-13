@@ -1,5 +1,7 @@
 package com.payroll.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -10,9 +12,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Document(collection = "compensation_info")
 public class CompensationInfo {
+
     @Id
     private String id;
-    private String payType;
-    private String frequency;
+
+    @NotBlank(message = "Pay type is required")
+    private String payType; // Hourly, Salary
+
+    @NotBlank(message = "Frequency is required")
+    private String frequency; // Monthly, Bi-weekly, etc.
+
+    @NotNull(message = "Amount is required")
     private Double amount;
 }
