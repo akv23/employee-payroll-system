@@ -1,51 +1,55 @@
 package com.payroll.controller;
 
-import com.payroll.model.SalarySlip;
-import com.payroll.repository.SalarySlipRepository;
-import com.payroll.repository.EmployeeRepository;
-import com.payroll.service.PayrollService;
 import com.payroll.model.Employee;
-import com.payroll.service.UserService;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import com.payroll.payload.EmployeeRequest;
+import com.payroll.service.EmployeeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/employee")
+@RequiredArgsConstructor
 public class EmployeeController {
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private PayrollService payrollService;
-
-    @Autowired
-    private SalarySlipRepository slipRepository;
-
-    @GetMapping("/profile")
-    public ResponseEntity<Employee> getProfile(Authentication authentication) {
-        String empId = authentication.getName();
-        Employee employee = userService.getProfile(empId);
-        return ResponseEntity.ok(employee);
+    @PostMapping("/create")
+    public ResponseEntity<?> createEmployee(@Valid @RequestBody EmployeeRequest employeeRequest) {
+        try {
+            Employee saved = employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating employee: " + e.getMessage());
+        }
     }
 
-    @GetMapping("/salary_slip/{empId}")
-    public SalarySlip getSalarySlip(@PathVariable String empId) {
-        return payrollService.generateSlip(empId);
+    @GetMapping("/{empId}")
+    public ResponseEntity<?> getEmployeeById(@PathVariable String empId) {
+        return employeeService.getEmployeeByEmpId(empId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/history/{empId}")
-    public List<SalarySlip> getSalaryHistory(@PathVariable String empId) {
-        return payrollService.getSlipHistory(empId);
+    @PutMapping("/update/{empId}")
+    public ResponseEntity<?> updateEmployee(@PathVariable String empId, @Valid @RequestBody EmployeeRequest employeeRequest) {
+        try {
+            Employee updated = employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error updating employee: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete/{empId}")
+    public ResponseEntity<?> deleteEmployee(@PathVariable String empId) {
+        try {
+            employeeService.deleteEmployee(empId);
+            return ResponseEntity.ok("Employee deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error deleting employee: " + e.getMessage());
+        }
     }
 }
-

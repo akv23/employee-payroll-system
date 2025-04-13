@@ -1,128 +1,67 @@
 package com.payroll.model;
 
+import java.time.LocalDate;
+
+// import com.payroll.model.Address;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
 
-@Document("employees")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "employees")
 public class Employee {
+
     @Id
     private String id;
+
     @Indexed(unique = true)
+    @NotNull(message = "Employee ID cannot be null")
     private String empId;
-    private String firstName;
-    private String lastName;
+
     @Indexed(unique = true)
+    @Email(message = "Email should be valid")
     private String email;
+
+    @NotNull(message = "Password cannot be null")
     private String password;
+
     private String role; // ADMIN or EMPLOYEE
-    private boolean active;
-    private String status; // ACTIVE or TERMINATED
-    private String payType; // SALARIED or HOURLY
-    private double salary;
-    private double hourlyRate;
-    private String name;
 
+    @NotNull(message = "First Name cannot be null")
+    private String firstName;
 
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
+    @NotNull(message = "Last Name cannot be null")
+    private String lastName;
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    @NotNull(message = "Date of Birth cannot be null")
+    private LocalDate dob;
 
-    public String getEmpId() {
-        return empId;
-    }
+    @NotNull(message = "Mobile Number cannot be null")
+    @Pattern(regexp = "^\\d{10}$", message = "Mobile Number should be 10 digits")
+    private String mobileNumber;
 
-    public void setEmpId(String empId) {
-        this.empId = empId;
-    }
+    @NotNull(message = "National ID cannot be null")
+    private String nationalId;
 
-    public String getFirstName() {
-        return firstName;
-    }
+    private Address address;
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+    // References
+    @DBRef
+    private CompanyInfo companyInfo;
 
-    public String getLastName() {
-        return lastName;
-    }
+    @DBRef
+    private CompensationInfo compensationInfo;
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getPayType() {
-        return payType;
-    }
-
-    public void setPayType(String payType) {
-        this.payType = payType;
-    }
-
-    public double getSalary() {
-        return salary;
-    }
-
-    public void setSalary(double salary) {
-        this.salary = salary;
-    }
-
-    public double getHourlyRate() {
-        return hourlyRate;
-    }
-
-    public void setHourlyRate(double hourlyRate) {
-        this.hourlyRate = hourlyRate;
-    }
-    public String getName() {
-        return firstName + " " + lastName;
-    }
-
-
+    @DBRef
+    private JobInfo jobInfo;
 }
