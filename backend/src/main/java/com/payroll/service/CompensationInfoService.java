@@ -3,19 +3,22 @@ package com.payroll.service;
 import com.payroll.model.CompensationInfo;
 import com.payroll.payload.CompensationInfoRequest;
 import com.payroll.repository.CompensationInfoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+
 public class CompensationInfoService {
 
-    private final CompensationInfoRepository compensationInfoRepository;
+    private final CompensationInfoRepository compensationInfoRepository = null;
 
     public CompensationInfo create(CompensationInfoRequest request) {
-        CompensationInfo info = new CompensationInfo(null, request.getPayType(), request.getFrequency(), request.getAmount());
+        CompensationInfo info = CompensationInfo.builder()
+            .payType(request.getPayType())
+            .frequency(request.getFrequency())
+            .amount(request.getAmount())
+            .build();
         return compensationInfoRepository.save(info);
     }
 

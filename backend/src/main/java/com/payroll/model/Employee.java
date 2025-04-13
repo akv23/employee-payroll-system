@@ -4,9 +4,7 @@ import java.time.LocalDate;
 
 // import com.payroll.model.Address;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -35,6 +33,7 @@ public class Employee {
     @NotNull(message = "Password cannot be null")
     private String password;
 
+    @NotBlank(message = "Role is required")
     private String role; // ADMIN or EMPLOYEE
 
     @NotNull(message = "First Name cannot be null")

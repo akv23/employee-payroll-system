@@ -1,55 +1,32 @@
 package com.payroll.payload;
 
-import javax.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Email;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegisterRequest {
-    // For both admin and employee
-    @NotBlank(message = "Employee ID is required")
-    private String empId;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
-    private String email;
+    // Employee Info
+    @NotNull(message = "Employee Info is required")
+    @Valid
+    private EmployeeRequest employee;
 
-    @NotBlank(message = "Password is required")
-    private String password;
+    // Company Info
+    @NotNull(message = "Company Info is required")
+    @Valid
+    private CompanyInfoRequest companyInfo;
 
-    // Only required for employee
-    private String firstName;
-    private String lastName;
+    // Job Info
+    @NotNull(message = "Job Info is required")
+    @Valid
+    private JobInfoRequest jobInfo;
 
-
-    // Getters and setters
-
-    public String getEmpId() {
-        return empId;
-    }
-    public void setEmpId(String empId) {
-        this.empId = empId;
-    }
-    public String getFirstName() {
-        return firstName;
-    }
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-    public String getLastName() {
-        return lastName;
-    }
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-    public String getPassword() {
-        return password;
-    }
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    // Compensation Info
+    @NotNull(message = "Compensation Info is required")
+    @Valid
+    private CompensationInfoRequest compensationInfo;
 }
