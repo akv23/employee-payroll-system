@@ -1,0 +1,10 @@
+{
+  "id": "jobinfo123",
+  "employeeId": "emp123",
+  "companyId": "company123",
+  "jobLevelId": "joblevel123",
+  "payGroupId": "paygroup123",
+  "payComponentIds": ["component1", "component2"],
+  "bonusId": "bonus123",
+  "employeeStatus": "ACTIVE"
+}

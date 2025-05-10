@@ -1,0 +1,16 @@
+{
+  "id": "emp123",
+  "empId": "E001",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "mobileNumber": "9876543210",
+  "nationalId": "AADHAR12345",
+  "address": {
+    "street": "123 St",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "postal_code": "400001",
+    "country": "India"
+  }
+}

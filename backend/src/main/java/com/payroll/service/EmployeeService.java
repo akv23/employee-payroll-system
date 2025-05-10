@@ -1,11 +1,16 @@
 package com.payroll.service;
 
-import com.payroll.model.*;
-import com.payroll.payload.EmployeeRequest;
-import com.payroll.repository.*;
+import com.mongodb.DuplicateKeyException;
+import com.payroll.dto.AddressDTO;
+import com.payroll.dto.EmployeeRequestDTO;
+import com.payroll.dto.EmployeeResponseDTO;
+import com.payroll.model.Address;
+import com.payroll.model.Employee;
+import com.payroll.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -14,57 +19,125 @@ import org.springframework.stereotype.Service;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
-    private final CompanyInfoRepository companyInfoRepository;
-    private final CompensationInfoRepository compensationInfoRepository;
-    private final JobInfoRepository jobInfoRepository;
 
-    public Employee createOrUpdateEmployeeFromRequest(EmployeeRequest employeeRequest) {
-        Employee employee = new Employee();
-        
-        // Set fields from EmployeeRequest
-        employee.setEmpId(employeeRequest.getEmpId());
-        employee.setEmail(employeeRequest.getEmail());
-        employee.setPassword(employeeRequest.getPassword());
-        employee.setFirstName(employeeRequest.getFirstName());
-        employee.setLastName(employeeRequest.getLastName());
-        employee.setDob(employeeRequest.getDob());
-        employee.setMobileNumber(employeeRequest.getMobileNumber());
-        employee.setNationalId(employeeRequest.getNationalId());
-        employee.setAddress(employeeRequest.getAddress());
-
-        // Auto-create referenced entities if IDs are not provided
-        if (employeeRequest.getCompanyInfoId() != null) {
-            employee.setCompanyInfo(companyInfoRepository.findById(employeeRequest.getCompanyInfoId())
-                .orElseThrow(() -> new RuntimeException("CompanyInfo not found")));
-        } else {
-            CompanyInfo companyInfo = new CompanyInfo(); // Create default or handle default data
-            employee.setCompanyInfo(companyInfoRepository.save(companyInfo));
+    // Create a new employee
+    public EmployeeResponseDTO createEmployee(EmployeeRequestDTO requestEmployee) {
+        if (employeeRepository.existsByEmpId(requestEmployee.getEmpId())) {
+            throw new RuntimeException("Employee ID already exists");
         }
-
-        if (employeeRequest.getCompensationInfoId() != null) {
-            employee.setCompensationInfo(compensationInfoRepository.findById(employeeRequest.getCompensationInfoId())
-                .orElseThrow(() -> new RuntimeException("CompensationInfo not found")));
-        } else {
-            CompensationInfo compensationInfo = new CompensationInfo(); // Create default or handle default data
-            employee.setCompensationInfo(compensationInfoRepository.save(compensationInfo));
+        if (employeeRepository.existsByEmail(requestEmployee.getEmail())) {
+            throw new RuntimeException("Email already exists");
         }
-
-        if (employeeRequest.getJobInfoId() != null) {
-            employee.setJobInfo(jobInfoRepository.findById(employeeRequest.getJobInfoId())
-                .orElseThrow(() -> new RuntimeException("JobInfo not found")));
-        } else {
-            JobInfo jobInfo = new JobInfo(); // Create default or handle default data
-            employee.setJobInfo(jobInfoRepository.save(jobInfo));
+        if (employeeRepository.existsByNationalId(requestEmployee.getNationalId())) {
+            throw new RuntimeException("National ID already exists");
         }
+        Employee employee = mapToEntity(requestEmployee);
+        try {
+            employee = employeeRepository.save(employee);
+        } catch (DuplicateKeyException e) {
+            throw new RuntimeException("Duplicate key: Employee ID or Email already exists");
 
-        return employeeRepository.save(employee);
+        }
+        return mapToResponseDTO(employee);
     }
 
-    public void deleteEmployee(String empId) {
-        employeeRepository.deleteByEmpId(empId);
+    // Get employee by ID
+    public EmployeeResponseDTO getEmployeeById(String id) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
+        return mapToResponseDTO(employee);
     }
 
-    public Optional<Employee> getEmployeeByEmpId(String empId) {
-        return employeeRepository.findByEmpId(empId);
+    //Get all employees
+    public List<EmployeeResponseDTO> getAllEmployees() {
+        try{
+            List<Employee> employees = employeeRepository.findAll();
+            if (employees.isEmpty()) {
+                throw new RuntimeException("No employees found");
+            }
+            return employees.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching employees: " + e.getMessage());
+        }
+
+    }
+
+    //Delete employee by ID
+    public void deleteEmployeeById(String id) {
+       if(!employeeRepository.existsById(id)) {
+            throw new RuntimeException("Employee not found with id: " + id);
+        }
+        employeeRepository.deleteById(id);
+    }
+    // Update employee by ID
+    public EmployeeResponseDTO updateEmployee(String id, EmployeeRequestDTO requestEmployee) {
+        Employee existingemployee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
+
+        existingemployee.setFirstName(requestEmployee.getFirstName());
+        existingemployee.setLastName(requestEmployee.getLastName());
+        existingemployee.setEmail(requestEmployee.getEmail());
+        existingemployee.setMobileNumber(requestEmployee.getMobileNumber());
+        existingemployee.setNationalId(requestEmployee.getNationalId());
+        existingemployee.setEmpId(requestEmployee.getEmpId());
+        existingemployee.setAddress(mapToAddress(requestEmployee.getAddress()));
+
+        existingemployee = employeeRepository.save(existingemployee);
+        return mapToResponseDTO(existingemployee);
+    }
+
+    //Helper methods to map EmployeeRequestDTO to Employee
+    private Employee mapToEntity(EmployeeRequestDTO requestEmployee) {
+        return Employee.builder()
+                .empId(requestEmployee.getEmpId())
+                .firstName(requestEmployee.getFirstName())
+                .lastName(requestEmployee.getLastName())
+                .email(requestEmployee.getEmail())
+                .mobileNumber(requestEmployee.getMobileNumber())
+                .nationalId(requestEmployee.getNationalId())
+                .address(mapToAddress(requestEmployee.getAddress()))
+                .build();
+    }
+
+    //Helper methods to map AddressDTO to Address
+     private Address mapToAddress(AddressDTO requestAddress) {
+        if (requestAddress == null) return null;
+        return Address.builder()
+                .street(requestAddress.getStreet())
+                .city(requestAddress.getCity())
+                .state(requestAddress.getState())
+                .postalCode(requestAddress.getPostalCode())
+                .country(requestAddress.getCountry())
+                .build();
+    }
+
+    //Helper method to map Employee to EmployeeResponseDTO
+    private EmployeeResponseDTO mapToResponseDTO(Employee employee) {
+        Address address = employee.getAddress();
+        AddressDTO addressDTO = null;
+
+        if (address != null) {
+            addressDTO = AddressDTO.builder()
+                    .street(address.getStreet())
+                    .city(address.getCity())
+                    .state(address.getState())
+                    .postalCode(address.getPostalCode())
+                    .country(address.getCountry())
+                    .build();
+        }
+
+        return EmployeeResponseDTO.builder()
+                .id(employee.getId())
+                .empId(employee.getEmpId())
+                .firstName(employee.getFirstName())
+                .lastName(employee.getLastName())
+                .email(employee.getEmail())
+                .mobileNumber(employee.getMobileNumber())
+                .nationalId(employee.getNationalId())
+                .address(addressDTO)
+                .build();
     }
 }
+

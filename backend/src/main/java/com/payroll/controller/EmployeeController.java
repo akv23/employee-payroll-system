@@ -1,13 +1,12 @@
 package com.payroll.controller;
 
-import com.payroll.model.Employee;
-import com.payroll.payload.EmployeeRequest;
+
+import com.payroll.dto.EmployeeRequestDTO;
 import com.payroll.service.EmployeeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/employee")
@@ -16,40 +15,35 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createEmployee(@Valid @RequestBody EmployeeRequest employeeRequest) {
-        try {
-            Employee saved = employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
-            return ResponseEntity.ok(saved);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error creating employee: " + e.getMessage());
-        }
+    //Create a new employee
+    @PostMapping
+    public ResponseEntity<?> createEmployee(@Valid @RequestBody EmployeeRequestDTO employeeRequest) {
+        return ResponseEntity.ok(employeeService.createEmployee(employeeRequest));
     }
 
-    @GetMapping("/{empId}")
-    public ResponseEntity<?> getEmployeeById(@PathVariable String empId) {
-        return employeeService.getEmployeeByEmpId(empId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    //Get employee by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getEmployee(@PathVariable String id) {
+        return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
-    @PutMapping("/update/{empId}")
-    public ResponseEntity<?> updateEmployee(@PathVariable String empId, @Valid @RequestBody EmployeeRequest employeeRequest) {
-        try {
-            Employee updated = employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error updating employee: " + e.getMessage());
-        }
+    //Get all employees
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllEmployees() {
+        return ResponseEntity.ok(employeeService.getAllEmployees());
     }
 
-    @DeleteMapping("/delete/{empId}")
-    public ResponseEntity<?> deleteEmployee(@PathVariable String empId) {
-        try {
-            employeeService.deleteEmployee(empId);
-            return ResponseEntity.ok("Employee deleted successfully");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error deleting employee: " + e.getMessage());
-        }
+    //Update employee by ID
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateEmployee(@PathVariable String id, @Valid @RequestBody EmployeeRequestDTO employeeRequest) {
+        return ResponseEntity.ok(employeeService.updateEmployee(id, employeeRequest));
+    }
+
+    //Delete employee by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteEmployee(@PathVariable String id) {
+        employeeService.deleteEmployeeById(id);
+        return ResponseEntity.ok("Employee deleted successfully");
     }
 }
+

@@ -7,12 +7,10 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface EmployeeRepository extends MongoRepository<Employee, String> {
-
-    Optional<Employee> findByEmail(String email);
     Optional<Employee> findByEmpId(String empId);
-    Optional<Employee> findByEmailAndEmpId(String email, String empId);
-
-    void deleteByEmail(String email);
-    void deleteByEmpId(String empId);
-    void deleteByEmailAndEmpId(String email, String empId);
+    Optional<Employee> findByEmail(String email);
+    Optional<Employee> findByNationalId(String nationalId);
+    boolean existsByEmpId(String empId);
+    boolean existsByEmail(String email);
+    boolean existsByNationalId(String nationalId);
 }

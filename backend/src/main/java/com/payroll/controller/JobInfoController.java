@@ -1,7 +1,7 @@
 package com.payroll.controller;
 
-// import com.payroll.model.JobInfo;
-import com.payroll.payload.JobInfoRequest;
+
+import com.payroll.dto.JobInfoRequestDTO;
 import com.payroll.service.JobInfoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,36 +9,40 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/job")
+@RequestMapping("/api/jobinfo")
 @RequiredArgsConstructor
 public class JobInfoController {
 
     private final JobInfoService jobInfoService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> create(@Valid @RequestBody JobInfoRequest request) {
-        return ResponseEntity.ok(jobInfoService.createJobInfo(request));
+    // Create JobInfo
+    @PostMapping
+    public ResponseEntity<?> createJobInfo(@Valid @RequestBody JobInfoRequestDTO jobRequest) {
+        return ResponseEntity.ok(jobInfoService.createJobInfo(jobRequest));
     }
 
+    // Get JobInfo by ID
     @GetMapping("/{id}")
-    public ResponseEntity<?> get(@PathVariable String id) {
-        return jobInfoService.getById(id)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> getJobInfo(@PathVariable String id) {
+        return ResponseEntity.ok(jobInfoService.getJobInfoById(id));
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody JobInfoRequest request) {
-        try {
-            return ResponseEntity.ok(jobInfoService.updateJobInfo(id, request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    // Get all JobInfos
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllJobInfos() {
+        return ResponseEntity.ok(jobInfoService.getAllJobInfos());
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
+    // Update JobInfo
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateJobInfo(@PathVariable String id, @Valid @RequestBody JobInfoRequestDTO jobRequest) {
+        return ResponseEntity.ok(jobInfoService.updateJobInfo(id, jobRequest));
+    }
+
+    // Delete JobInfo
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteJobInfo(@PathVariable String id) {
         jobInfoService.deleteJobInfo(id);
-        return ResponseEntity.ok("JobInfo deleted successfully");
+        return ResponseEntity.ok("Job Info deleted successfully");
     }
 }

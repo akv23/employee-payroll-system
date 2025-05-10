@@ -1,0 +1,12 @@
+{
+    "id": "comp123",
+    "payGroupId": "paygroup123",
+    "payComponentIds": ["pc1", "pc2"],
+    "paymentInfo": {
+      "bank_name": "State Bank of India",
+      "account_number": "1234567890",
+      "ifsc_code": "SBIN0000123",
+      "account_holder_name": "John Doe"
+    }
+  }
+  

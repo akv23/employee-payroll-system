@@ -1,34 +1,35 @@
 package com.payroll.controller;
 
-import com.payroll.payload.LoginRequest;
-import com.payroll.payload.LoginResponse;
-import com.payroll.payload.RegisterRequest;
+import com.payroll.dto.EmployeeRequestDTO;
+import com.payroll.model.Employee;
+import com.payroll.model.User;
 import com.payroll.service.AuthService;
-
-import jakarta.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
-    // POST: Login user and return JWT token
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        String token = authService.authenticateUser(request);
-        return ResponseEntity.ok(new LoginResponse(token));
+    public ResponseEntity<String> login(@RequestParam String username, @RequestParam String password) {
+        String token = authService.login(username, password);
+        return ResponseEntity.ok(token);
     }
 
-    // POST: Register employee (default EMPLOYEE role)
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        authService.registerEmployee(request);
-        return ResponseEntity.ok("Employee registered successfully.");
+    @PostMapping("/register-admin")
+    public ResponseEntity<User> registerAdmin(@RequestParam String username, @RequestParam String password) {
+        User admin = authService.registerAdmin(username, password);
+        return ResponseEntity.ok(admin);
+    }
+
+    @PostMapping("/register-employee")
+    public ResponseEntity<Employee> registerEmployee(@RequestBody EmployeeRequestDTO request) {
+        Employee employee = authService.registerEmployee(request);
+        return ResponseEntity.ok(employee);
     }
 }

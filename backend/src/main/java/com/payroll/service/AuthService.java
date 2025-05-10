@@ -1,79 +1,86 @@
 package com.payroll.service;
 
-import com.payroll.payload.*;
-import com.payroll.model.*;
-import com.payroll.security.JwtUtil;
+
+import com.payroll.dto.AddressDTO;
+import com.payroll.dto.EmployeeRequestDTO;
+import com.payroll.model.Address;
+import com.payroll.model.Employee;
+import com.payroll.model.Role;
+import com.payroll.model.User;
+import com.payroll.repository.EmployeeRepository;
+import com.payroll.repository.UserRepository;
+import com.payroll.config.JwtUtil;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collections;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final EmployeeService employeeService;
-    private final CompanyInfoService companyInfoService;
-    private final JobInfoService jobInfoService;
-    private final CompensationInfoService compensationInfoService;
+    private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
+    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
 
-    public String authenticateUser(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String email = userDetails.getUsername(); // same as request.getEmail()
-
-        // Extract first role from authorities
-        String role = userDetails.getAuthorities().stream()
-                .findFirst()
-                .map(auth -> auth.getAuthority().replace("ROLE_", "")) // e.g., "ROLE_ADMIN" -> "ADMIN"
-                .orElse("EMPLOYEE");
-
-        return jwtUtil.generateToken(email, role);
+    public String login(String username, String password) {
+        User user = userRepository.findByUsername(username)
+    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+        String role = user.getRoles().stream()
+                      .findFirst()
+                      .map(Enum::name)
+                      .orElse("ADMIN");  // Default role if none is found
+        
+        return jwtUtil.generateToken(user.getUsername(), role);
     }
 
-    public void registerEmployee(RegisterRequest request) {
+    public Employee registerEmployee(EmployeeRequestDTO request) {
+        if (employeeRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Employee with this email already exists");
+        }
 
-        // Create associated entities
-        CompanyInfo companyInfo = companyInfoService.createCompanyInfo(request.getCompanyInfo());
-        JobInfo jobInfo = jobInfoService.createJobInfo(request.getJobInfo());
-        CompensationInfo compensationInfo = compensationInfoService.create(request.getCompensationInfo());
+        Employee employee = Employee.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(request.getEmail())
+                .mobileNumber(request.getMobileNumber())
+                .nationalId(request.getNationalId())
+                .address(mapToAddress(request.getAddress()))
+                .build();
 
-        // request Ids
-        EmployeeRequest employeeRequest = request.getEmployee();
-        employeeRequest.setCompanyInfoId(companyInfo.getId());
-        employeeRequest.setJobInfoId(jobInfo.getId());
-        employeeRequest.setCompensationInfoId(compensationInfo.getId());
-
-        // Create the employee (default role = EMPLOYEE)
-        employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
-        employeeRequest.setRole("EMPLOYEE");
-    employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
-
+        return employeeRepository.save(employee);
     }
 
-    public void registerAdmin(RegisterRequest request) {
+    private Address mapToAddress(AddressDTO addressDTO) {
+    if (addressDTO == null) return null;
 
-        // Create associated entities
-        CompanyInfo companyInfo = companyInfoService.createCompanyInfo(request.getCompanyInfo());
-        JobInfo jobInfo = jobInfoService.createJobInfo(request.getJobInfo());
-        CompensationInfo compensationInfo = compensationInfoService.create(request.getCompensationInfo());
+    return Address.builder()
+            .street(addressDTO.getStreet())
+            .city(addressDTO.getCity())
+            .state(addressDTO.getState())
+            .postalCode(addressDTO.getPostalCode())
+            .country(addressDTO.getCountry())
+            .build();
+}
 
-        // request Ids
-        EmployeeRequest employeeRequest = request.getEmployee();
-        employeeRequest.setCompanyInfoId(companyInfo.getId());
-        employeeRequest.setJobInfoId(jobInfo.getId());
-        employeeRequest.setCompensationInfoId(compensationInfo.getId());
+    public User registerAdmin(String username, String password) {
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Admin with this email already exists");
+        }
 
-        // Create the employee ( role = Admin)
-        employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
-        employeeRequest.setRole("ADMIN");
-        employeeService.createOrUpdateEmployeeFromRequest(employeeRequest);
+        User admin = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .roles(Collections.singleton(Role.ADMIN))
+                .build();
+
+        return userRepository.save(admin);
     }
 }

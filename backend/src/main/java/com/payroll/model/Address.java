@@ -2,11 +2,12 @@ package com.payroll.model;
 
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Field;
-
 @Getter
 @Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Address {
 
     @Field("street")
@@ -18,9 +19,10 @@ public class Address {
     @Field("state")
     private String state;
 
-    @Field("postalCode")
+    @Field("postal_code")
     private String postalCode;
 
     @Field("country")
     private String country;
 }
+
