@@ -1,8 +1,7 @@
 package com.payroll.controller;
 
-import com.payroll.dto.EmployeeRequestDTO;
-import com.payroll.model.Employee;
-import com.payroll.model.User;
+import com.payroll.dto.LoginRequestDTO;
+import com.payroll.dto.RegisterRequestDTO;
 import com.payroll.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,21 +14,18 @@ public class AuthController {
 
     private final AuthService authService;
 
+    // Endpoint for user login
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestParam String username, @RequestParam String password) {
-        String token = authService.login(username, password);
+    public ResponseEntity<String> login(@RequestBody LoginRequestDTO loginRequest) {
+        String token = authService.login(loginRequest.getUsername(), loginRequest.getPassword());
         return ResponseEntity.ok(token);
     }
 
-    @PostMapping("/register-admin")
-    public ResponseEntity<User> registerAdmin(@RequestParam String username, @RequestParam String password) {
-        User admin = authService.registerAdmin(username, password);
-        return ResponseEntity.ok(admin);
+    // Endpoint for user registration (admin)
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody RegisterRequestDTO registerRequest) {
+        authService.registerAdmin(registerRequest.getUsername(), registerRequest.getPassword());
+        return ResponseEntity.ok("Admin registered successfully");
     }
 
-    @PostMapping("/register-employee")
-    public ResponseEntity<Employee> registerEmployee(@RequestBody EmployeeRequestDTO request) {
-        Employee employee = authService.registerEmployee(request);
-        return ResponseEntity.ok(employee);
-    }
 }
